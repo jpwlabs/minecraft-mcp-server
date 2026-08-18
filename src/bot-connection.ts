@@ -103,6 +103,21 @@ export class BotConnection {
       this.callbacks.onLog('info', 'Bot logged in successfully');
     });
 
+    // JPW Labs patch: servers that force a resource pack (e.g. ItemsAdder) hold the client
+    // in the configuration phase until it answers the push. mineflayer 4.x's
+    // accept/denyResourcePack helpers crash on the config-phase add_resource_pack packet
+    // (their captured uuid is never set), so answer the raw packet directly.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (bot._client as any).on('add_resource_pack', (d: any) => {
+      try {
+        (bot._client as any).write('resource_pack_receive', { uuid: d.uuid, result: 3 }); // ACCEPTED
+        (bot._client as any).write('resource_pack_receive', { uuid: d.uuid, result: 0 }); // SUCCESSFULLY_LOADED
+        this.callbacks.onLog('info', 'Accepted forced resource pack (raw config-phase handler)');
+      } catch (err) {
+        this.callbacks.onLog('warn', `Resource pack accept failed: ${this.formatError(err)}`);
+      }
+    });
+
     bot.on('end', (reason) => {
       this.callbacks.onLog('info', `Bot disconnected: ${this.formatError(reason)}`);
 
