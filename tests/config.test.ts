@@ -10,7 +10,24 @@ test('parseConfig returns default values', (t) => {
   t.is(config.host, 'localhost');
   t.is(config.port, 25565);
   t.is(config.username, 'LLMBot');
+  t.is(config.auth, 'offline');
+  t.false(config.readOnly);
   
+  process.argv = originalArgv;
+});
+
+test('parseConfig enables the explicit Microsoft read-only observer profile', (t) => {
+  const originalArgv = process.argv;
+  process.argv = [
+    'node', 'script.js', '--auth', 'microsoft', '--read-only',
+    '--profiles-folder', '/var/lib/megamine-observer/auth'
+  ];
+
+  const config = parseConfig();
+
+  t.is(config.auth, 'microsoft');
+  t.true(config.readOnly);
+  t.is(config.profilesFolder, '/var/lib/megamine-observer/auth');
   process.argv = originalArgv;
 });
 

@@ -8,10 +8,21 @@ type McpResponse = {
   [key: string]: unknown;
 };
 
+export const READ_ONLY_TOOL_NAMES = new Set([
+  'detect-gamemode',
+  'find-blocks',
+  'find-entity',
+  'find-item',
+  'get-block-info',
+  'get-position',
+  'list-inventory',
+]);
+
 export class ToolFactory {
   constructor(
     private server: McpServer,
-    private connection: BotConnection
+    private connection: BotConnection,
+    private allowedTools?: ReadonlySet<string>
   ) {}
 
   registerTool(
@@ -21,6 +32,7 @@ export class ToolFactory {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     executor: (args: any) => Promise<McpResponse>
   ): void {
+    if (this.allowedTools && !this.allowedTools.has(name)) return;
     this.server.tool(name, description, schema, async (args: unknown): Promise<McpResponse> => {
       const connectionCheck = await this.connection.checkConnectionAndReconnect();
 

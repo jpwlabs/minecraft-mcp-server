@@ -78,6 +78,28 @@ You can give bot any commands through any active Claude Desktop chat. You can al
 
 Don't forget to mention that bot should do something in Minecraft in your prompt. Because saying this is a trigger to run MCP server. It will ask for your permissions.
 
+### JPW Labs read-only observer mode
+
+The JPW Labs fork adds a fail-closed observation profile for Mega Mine Guide:
+
+```sh
+npm start -- \
+  --host 192.0.2.10 \
+  --port 25565 \
+  --username guide-observer@example.com \
+  --auth microsoft \
+  --profiles-folder /var/lib/megamine-observer/auth \
+  --read-only
+```
+
+`--read-only` registers exactly seven non-mutating tools: `detect-gamemode`, `find-blocks`,
+`find-entity`, `find-item`, `get-block-info`, `get-position`, and `list-inventory`. It does not
+register chat, movement, flight, equip, crafting, furnace, place, or dig tools; it does not store
+chat or send the normal spawn announcement. Microsoft auth state must live in a private persistent
+directory. This software boundary complements, but does not replace, a dedicated licensed non-OP
+account, restricted server presence, network confinement, a kill switch, and dependency-audit
+review before production use.
+
 Using Claude Sonnet could give you some interesting results. The bot-agent would be really smart 🫡
 
 Example usage: [shared Claude chat](https://claude.ai/share/535d5f69-f102-4cdb-9801-f74ea5709c0b)
