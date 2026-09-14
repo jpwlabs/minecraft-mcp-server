@@ -11,6 +11,9 @@ interface BotConfig {
   host: string;
   port: number;
   username: string;
+  auth?: 'offline' | 'microsoft';
+  profilesFolder?: string;
+  readOnly?: boolean;
 }
 
 interface ConnectionCallbacks {
@@ -54,6 +57,8 @@ export class BotConnection {
       host: this.config.host,
       port: this.config.port,
       username: this.config.username,
+      auth: this.config.auth ?? 'offline',
+      ...(this.config.profilesFolder ? { profilesFolder: this.config.profilesFolder } : {}),
       plugins: { pathfinder },
     };
 
@@ -73,14 +78,16 @@ export class BotConnection {
       const defaultMove = new Movements(bot, mcData);
       bot.pathfinder.setMovements(defaultMove);
 
-      bot.chat('LLM-powered bot ready to receive instructions!');
+      if (!this.config.readOnly) bot.chat('LLM-powered bot ready to receive instructions!');
       this.callbacks.onLog('info', `Bot connected successfully. Username: ${this.config.username}, Server: ${this.config.host}:${this.config.port}`);
     });
 
-    bot.on('chat', (username, message) => {
-      if (username === bot.username) return;
-      this.callbacks.onChatMessage(username, message);
-    });
+    if (!this.config.readOnly) {
+      bot.on('chat', (username, message) => {
+        if (username === bot.username) return;
+        this.callbacks.onChatMessage(username, message);
+      });
+    }
 
     bot.on('kicked', (reason) => {
       this.callbacks.onLog('error', `Bot was kicked from server: ${this.formatError(reason)}`);

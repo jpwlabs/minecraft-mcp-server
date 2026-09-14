@@ -1,6 +1,6 @@
 import test from 'ava';
 import sinon from 'sinon';
-import { ToolFactory } from '../src/tool-factory.js';
+import { READ_ONLY_TOOL_NAMES, ToolFactory } from '../src/tool-factory.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { BotConnection } from '../src/bot-connection.js';
 
@@ -83,6 +83,31 @@ test('registerTool calls server.tool with correct parameters', async (t) => {
   t.is((mockServer.tool as sinon.SinonStub).firstCall.args[0], 'test_tool');
   t.is((mockServer.tool as sinon.SinonStub).firstCall.args[1], 'A test tool');
   t.is((mockServer.tool as sinon.SinonStub).firstCall.args[2], schema);
+});
+
+test('read-only factory registers only the closed observer allowlist', (t) => {
+  const mockServer = { tool: sinon.stub() } as unknown as McpServer;
+  const factory = new ToolFactory(
+    mockServer,
+    {} as BotConnection,
+    READ_ONLY_TOOL_NAMES
+  );
+
+  factory.registerTool('get-position', 'read', {}, async () => factory.createResponse('ok'));
+  factory.registerTool('send-chat', 'write', {}, async () => factory.createResponse('no'));
+  factory.registerTool('place-block', 'write', {}, async () => factory.createResponse('no'));
+
+  t.is((mockServer.tool as sinon.SinonStub).callCount, 1);
+  t.is((mockServer.tool as sinon.SinonStub).firstCall.args[0], 'get-position');
+  t.deepEqual([...READ_ONLY_TOOL_NAMES].sort(), [
+    'detect-gamemode',
+    'find-blocks',
+    'find-entity',
+    'find-item',
+    'get-block-info',
+    'get-position',
+    'list-inventory',
+  ]);
 });
 
 test('registerTool executor checks connection before executing', async (t) => {

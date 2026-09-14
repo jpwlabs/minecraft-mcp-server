@@ -6,7 +6,7 @@ import { setupStdioFiltering } from './stdio-filter.js';
 import { log } from './logger.js';
 import { parseConfig } from './config.js';
 import { BotConnection } from './bot-connection.js';
-import { ToolFactory } from './tool-factory.js';
+import { READ_ONLY_TOOL_NAMES, ToolFactory } from './tool-factory.js';
 import { MessageStore } from './message-store.js';
 import { registerPositionTools } from './tools/position-tools.js';
 import { registerInventoryTools } from './tools/inventory-tools.js';
@@ -47,7 +47,11 @@ async function main() {
     version: "2.0.4"
   });
 
-  const factory = new ToolFactory(server, connection);
+  const factory = new ToolFactory(
+    server,
+    connection,
+    config.readOnly ? READ_ONLY_TOOL_NAMES : undefined
+  );
   const getBot = () => connection.getBot()!;
 
   registerPositionTools(factory, getBot);
